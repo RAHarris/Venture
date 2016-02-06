@@ -1,0 +1,57 @@
+{
+  "version": 0.0,
+  "city": {
+    "name": "Seattle",
+    "region": "Washington, USA",
+    "periods": {
+      "0": { "name": "Native American Period", "start_year": -8000, "end_year": 1855 },
+      "1": { "name": "City Growth and Gold Rush", "start_year": 1855, "end_year": 1900 },
+      "2": { "name": "Pre- and Inter-War", "start_year": 1900, "end_year": 1945 },
+      "3": { "name": "Boeing Era", "start_year": 1945, "end_year": 1985 },
+      "4": { "name": "Tech Era", "start_year": 1985, "end_year": 2014 }
+    },
+    "image": "https://i.imgur.com/BjlaeWP.jpg",
+    "locations": [
+      {
+        "name": "Space Needle",
+        "summary": "An artistic and architectural marvel, built for the World Fair of year.",
+        "period_ids": [3, 4],
+        "uid": 1,
+        "coords": {
+          "lat": 47.6205,
+          "lng": -122.349083
+        }
+      },
+      {
+        "name": "Pike Place Market",
+        "summary": "Buy literally everything you could ever need.  Everything.  Also cheap flowers, because flowers are pretty.",
+        "period_ids": [2, 3, 4],
+        "uid": 2,
+        "coords": {
+          "lat": 47.6205,
+          "lng": -122.349083
+        }
+      },
+      {
+        "name": "Native American Museum",
+        "summary": "Located near the site where archaeologists have discovered evidence of human habitants 8000 years ago.  Very cool.",
+        "period_ids": [0, 4],
+        "uid": 4,
+        "coords": {
+          "lat": 47.6205,
+          "lng": -122.35908
+        }
+      },
+      {
+        "name": "dummy",
+        "summary": "Something with a short summary here.",
+        "period_ids": [2],
+        "uid": 5,
+        "coords": {
+          "lat": 47.6205,
+          "lng": -122.35908
+        }
+      }
+    ]
+  }
+}

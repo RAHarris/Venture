@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_margin="4dp">
+
+    <android.support.v7.widget.CardView
+        android:id="@+id/astu_card"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        card_view:cardCornerRadius="4dp"
+        card_view:cardUseCompatPadding="true"
+        card_view:cardPreventCornerOverlap="false">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="240dp"
+                android:adjustViewBounds="true"
+                android:id="@+id/astu_photo"
+                android:layout_alignParentTop="true"
+                />
+
+            <ImageView
+                android:id="@+id/astu_photo_overlay"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="#66000000"
+                android:layout_alignParentTop="true"/>
+
+            <TextView
+                android:id="@+id/city_name"
+                android:layout_width="match_parent"
+                android:layout_height="33dp"
+                android:textSize="20sp"
+                android:textColor="#FFFFFF"
+                android:paddingTop="3dp"
+                android:paddingLeft="10dp"
+                android:fontFamily="serif"
+                android:text="Sample city name"
+                android:layout_alignParentTop="true"/>
+
+            <TextView
+                android:id="@+id/city_summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:layout_below="@+id/city_name"
+                android:paddingLeft="10dp"
+                android:fontFamily="serif"
+                android:textColor="#FFFFFF"
+                android:text="Province/Region, Country"/>
+        </RelativeLayout>
+    </android.support.v7.widget.CardView>
+
+</LinearLayout>

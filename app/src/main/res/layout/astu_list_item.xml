@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:layout_margin="4dp">
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        card_view:cardBackgroundColor="@color/cardview_light_background"
+        card_view:cardCornerRadius="4dp">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/astu_photo"
+            />
+
+        <TextView
+            android:id="@+id/city_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="City title"/>
+
+        <TextView
+            android:id="@+id/city_summary"
+            android:layout_width="match_parent"
+            android:layout_height="fill_parent"
+            android:text="Summary of the city goes here.  It should probably be about a few sentences long, although god knows some idiot will put a five-paragraph essay in here if I let them."/>
+    </android.support.v7.widget.CardView>
+
+</LinearLayout>
