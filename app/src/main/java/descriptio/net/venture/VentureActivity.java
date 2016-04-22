@@ -4,7 +4,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -23,7 +22,7 @@ import descriptio.net.venture.models.Thauma;
 public class VentureActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
             AstuListFragment.OnListFragmentInteractionListener,
-            AddAstuFragment.OnAddAstuInteractionListener,
+            AddAstuFragment.OnAstuAddedListener,
             ThaumaListFragment.OnThaumaFragmentInteractionListener,
             ThaumaManager.OnThaumaManagerInteractionListener {
 
@@ -158,6 +157,6 @@ public class VentureActivity extends AppCompatActivity
 
     }
 
-    public void onAddAstuInteraction(Uri uri) {
+    public void onAstuAdded(Uri uri) {
     }
 }

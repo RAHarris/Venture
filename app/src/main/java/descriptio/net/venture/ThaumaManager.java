@@ -21,6 +21,8 @@ import android.widget.ToggleButton;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
@@ -51,7 +53,7 @@ import descriptio.net.venture.models.Thauma;
 public class ThaumaManager extends Fragment
         implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener{
+        GoogleApiClient.OnConnectionFailedListener, ResultCallback<Status> {
 
     public static final String ARG_THAUMA_UID = "thauma_uid";
     public static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 92;   // can be any magic number < 127
@@ -122,6 +124,8 @@ public class ThaumaManager extends Fragment
             Log.i("success", "loaded thauma " + mThauma.getName());
             mApiClient = new GoogleApiClient.Builder(this.getContext())
                     .addApi(LocationServices.API)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
                     .build();
             mApiClient.connect();
         }
@@ -148,7 +152,7 @@ public class ThaumaManager extends Fragment
                         Log.i(LOGCAT_TAG, "isChecked: true");
                         geofenceRequested = true;
                         mCircle.setFillColor(R.color.colorPrimary);
-                        //updateGeofence(mThauma.getCoords(), "123456");
+                        updateGeofence(mThauma.getCoords(), "123456");
 
                     } else {
                         Log.i(LOGCAT_TAG, "isChecked: false");
@@ -247,7 +251,7 @@ public class ThaumaManager extends Fragment
     @Override
     public void onConnected(Bundle bundle) {
         apiAvailable = true;
-        //updateGeofence(mThauma.getCoords(), "123456");
+        updateGeofence(mThauma.getCoords(), "123456");
     }
 
     @Override
@@ -260,6 +264,11 @@ public class ThaumaManager extends Fragment
     public void onConnectionFailed(ConnectionResult connectionResult) {
         apiAvailable = false;
         Log.e(LOGCAT_TAG, "connection to GoogleServices failed");
+    }
+
+    @Override
+    public void onResult(Status status) {
+        Log.i(LOGCAT_TAG, status.toString());
     }
 
     public interface OnThaumaManagerInteractionListener {
@@ -275,10 +284,16 @@ public class ThaumaManager extends Fragment
             builder.setCircularRegion(location[0], location[1], 100);
             builder.setLoiteringDelay(5000);
             builder.setNotificationResponsiveness(180000);
+            builder.setRequestId(id);
+            builder.setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER);
+            builder.setExpirationDuration(6000000);
             Geofence fence = builder.build();
-            GeofencingRequest request = new GeofencingRequest.Builder()
-                    .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL).addGeofence(fence).build();
-            LocationServices.GeofencingApi.addGeofences(mApiClient, request, PendingIntent.getService(this.getContext(), 1234, new Intent(this.getContext(), GeofenceTransitionsIntentService.class), PendingIntent.FLAG_UPDATE_CURRENT));
+            GeofencingRequest request = new GeofencingRequest.Builder().addGeofence(fence).build();
+            Intent intent = new Intent(this.getContext(), GeofenceTransitionsIntentService.class);
+            LocationServices.GeofencingApi
+                    .addGeofences(mApiClient, request, PendingIntent.getService(
+                            this.getContext(), 1234, new Intent(this.getContext(), GeofenceTransitionsIntentService.class), PendingIntent.FLAG_UPDATE_CURRENT))
+                    .setResultCallback(this);
         }
     }
 }
