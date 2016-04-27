@@ -15,6 +15,8 @@ import com.google.android.gms.location.GeofencingEvent;
 
 import java.util.List;
 
+import descriptio.net.venture.views.ThaumaManager;
+
 /**
  * Created by rahar on 1/18/2016.
  */
@@ -29,8 +31,14 @@ public class GeofenceTransitionsIntentService extends IntentService {
     protected void onHandleIntent(Intent intent) {
         Log.i(LOGCAT_TAG, "geofence intent receieved");
         GeofencingEvent event = GeofencingEvent.fromIntent(intent);
+        long astuId = intent.getLongExtra(ThaumaManager.ARG_ASTU_ID, -1);
+        int thaumaId = intent.getIntExtra(ThaumaManager.ARG_THAUMA_UID, -1);
         if (event.hasError()) {
             Log.e(LOGCAT_TAG, GeofenceStatusCodes.getStatusCodeString(event.getErrorCode()));
+            return;
+        }
+        if (astuId == -1 || thaumaId == -1) {
+            Log.e(LOGCAT_TAG, "an id attached to geofence is null: " + astuId + ", " + thaumaId);
             return;
         }
         int transition = event.getGeofenceTransition();
@@ -38,7 +46,10 @@ public class GeofenceTransitionsIntentService extends IntentService {
         if (transition == Geofence.GEOFENCE_TRANSITION_ENTER) {
             List triggering = event.getTriggeringGeofences();
             String transitionDetails = getGeofenceTransitionDetails(this, transition, triggering);
-            sendNotification(transitionDetails);
+            Intent clickIntent = new Intent(this, VentureActivity.class);
+            clickIntent.putExtra(ThaumaManager.ARG_ASTU_ID, astuId);
+            clickIntent.putExtra(ThaumaManager.ARG_THAUMA_UID, thaumaId);
+            sendNotification(transitionDetails, clickIntent);
         }
     }
 
@@ -46,11 +57,10 @@ public class GeofenceTransitionsIntentService extends IntentService {
         return "A geofence was triggered" + geofences.get(0).toString();
     }
 
-    private void sendNotification(String notificationString) {
+    private void sendNotification(String notificationString, Intent intent) {
         NotificationManager notificationManager =
                 (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        Intent intent = new Intent(this, VentureActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingNotificationIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 

@@ -1,4 +1,4 @@
-package descriptio.net.venture;
+package descriptio.net.venture.views;
 
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -11,11 +11,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import descriptio.net.venture.R;
+import descriptio.net.venture.io.PeriegesisDbHelper;
 import descriptio.net.venture.models.Astu;
 import descriptio.net.venture.models.Thauma;
 
 import java.io.InputStream;
-import java.util.List;
 
 /**
  * A fragment representing a list of Items.
@@ -25,10 +26,10 @@ import java.util.List;
  */
 public class ThaumaListFragment extends Fragment {
 
-    public static final String ARG_ASTU_FILENAME = "astu_filename";
+    private final String LOGCAT_TAG = "ThaumaListFragment";
+    public static final String ARG_ASTU_ID = "astu_id";
 
     private OnThaumaFragmentInteractionListener mListener;
-    private String mAstuFile;
     private Astu astu;
 
     /**
@@ -41,7 +42,6 @@ public class ThaumaListFragment extends Fragment {
     public static ThaumaListFragment newInstance(int columnCount) {
         ThaumaListFragment fragment = new ThaumaListFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_ASTU_FILENAME, columnCount);
         fragment.setArguments(args);
         return fragment;
     }
@@ -51,19 +51,21 @@ public class ThaumaListFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         if (getArguments() != null) {
-            mAstuFile = getArguments().getString(ARG_ASTU_FILENAME);
+            PeriegesisDbHelper dbHelper = new PeriegesisDbHelper(getContext());
+            long id = getArguments().getLong(ARG_ASTU_ID);
+            String filename = dbHelper.getAstuPath(id);
             AssetManager manager = getActivity().getAssets();
             InputStream stream;
             try {
-                stream = manager.open(mAstuFile);
+                stream = manager.open(filename);
             } catch (Exception e) {
                 stream = null;
-                Log.e("astea open", "there was a failure opening " + mAstuFile);
+                Log.e(LOGCAT_TAG, "there was a failure opening " + filename);
             }
             try {
-                astu = new Astu(stream);
+                astu = new Astu(stream, id);
             } catch (Exception e) {
-                Log.e("astea parse failure", "there was a failure parsing the stream");
+                Log.e(LOGCAT_TAG, "there was a failure parsing the stream");
             }
         }
     }
@@ -114,6 +116,6 @@ public class ThaumaListFragment extends Fragment {
      */
     public interface OnThaumaFragmentInteractionListener {
         // TODO: Update argument type and name
-        void onThaumaFragmentInteraction(Thauma thauma);
+        void onThaumaFragmentInteraction(Astu astu, Thauma thauma);
     }
 }

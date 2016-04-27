@@ -1,4 +1,4 @@
-package descriptio.net.venture;
+package descriptio.net.venture.views;
 
 import android.content.Context;
 import android.content.res.AssetManager;
@@ -11,6 +11,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import descriptio.net.venture.R;
+import descriptio.net.venture.io.AstuStateContract;
+import descriptio.net.venture.io.PeriegesisDbHelper;
 import descriptio.net.venture.models.Astu;
 
 import java.io.IOException;
@@ -24,6 +27,8 @@ import java.util.List;
  * interface.
  */
 public class AstuListFragment extends Fragment {
+
+    private static final String LOGCAT_TAG = "AstuListFragment";
 
     private OnListFragmentInteractionListener mListener;
     List<Astu> astea;
@@ -46,35 +51,28 @@ public class AstuListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        PeriegesisDbHelper dbHelper = new PeriegesisDbHelper(getContext());
         View view = inflater.inflate(R.layout.fragment_astulist_list, container, false);
         View rView = view.findViewById(R.id.astulist_recyclerview);
 
-        astea = new ArrayList<Astu>();
+        astea = new ArrayList<>();
         AssetManager manager = getActivity().getAssets();
-        String[] asteaFiles = new String[0];
-        try {
-            asteaFiles = manager.list("astea");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        List<String[]> asteaFiles = dbHelper.getAsteaPaths();
         InputStream stream;
-        for (String filename : asteaFiles){
+        for (String[] curFile : asteaFiles){
             try {
-                stream = manager.open("astea/" + filename);
+                stream = manager.open(curFile[1]);
             } catch (Exception e) {
                 stream = null;
-                Log.e("astea open", "there was a failure opening astu-seattle-0-1.json");
+                Log.e(LOGCAT_TAG, "there was a failure opening " + curFile[1]);
             }
             try {
-                Astu item = new Astu(stream);
-                item.filename = "astea/" + filename;
+                Astu item = new Astu(stream, Long.parseLong(curFile[0]));
                 astea.add(item);
             } catch (Exception e) {
-                Log.e("astea parse failure", "there was a failure parsing the stream");
+                Log.e(LOGCAT_TAG, "there was a failure parsing the stream");
             }
         }
-
-
 
         if (rView instanceof RecyclerView) {
             Context context = view.getContext();
@@ -84,7 +82,6 @@ public class AstuListFragment extends Fragment {
         }
         return view;
     }
-
 
     @Override
     public void onAttach(Context context) {

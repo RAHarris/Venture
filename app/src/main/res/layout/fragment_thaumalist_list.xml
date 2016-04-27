@@ -9,6 +9,6 @@
         android:name="descriptio.net.venture.ThaumaListFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="descriptio.net.venture.ThaumaListFragment"
+        tools:context=".views.ThaumaListFragment"
         tools:listitem="@layout/fragment_thaumalist" />
 </FrameLayout>

@@ -1,5 +1,6 @@
 package descriptio.net.venture;
 
+import android.content.Intent;
 import android.support.v4.app.FragmentTransaction;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,8 +17,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View.OnClickListener;
 
+import descriptio.net.venture.io.PeriegesisDbHelper;
 import descriptio.net.venture.models.Astu;
 import descriptio.net.venture.models.Thauma;
+import descriptio.net.venture.views.AddAstuFragment;
+import descriptio.net.venture.views.AstuListFragment;
+import descriptio.net.venture.views.ThaumaListFragment;
+import descriptio.net.venture.views.ThaumaManager;
 
 public class VentureActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
@@ -29,6 +35,8 @@ public class VentureActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Intent intent = getIntent();
 
         setContentView(R.layout.view_astu_list);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -58,12 +66,27 @@ public class VentureActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        if (findViewById(R.id.frag_list_container) != null) {
-            if (savedInstanceState != null) {
-                return;
+        if (intent != null &&
+                intent.getLongExtra(ThaumaManager.ARG_ASTU_ID, -1) != -1 &&
+                intent.getIntExtra(ThaumaManager.ARG_THAUMA_UID, -1) != -1) {
+            ThaumaManager detail = new ThaumaManager();
+            Bundle args = new Bundle();
+            args.putLong(ThaumaManager.ARG_ASTU_ID, intent.getLongExtra(ThaumaManager.ARG_ASTU_ID, -1));
+            args.putInt(ThaumaManager.ARG_THAUMA_UID, intent.getIntExtra(ThaumaManager.ARG_THAUMA_UID, -1));
+            detail.setArguments(args);
+
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.frag_list_container, detail);
+            transaction.addToBackStack(null);
+            transaction.commit();
+        } else {
+            if (findViewById(R.id.frag_list_container) != null) {
+                if (savedInstanceState != null) {
+                    return;
+                }
+                AstuListFragment listFragment = new AstuListFragment();
+                getSupportFragmentManager().beginTransaction().add(R.id.frag_list_container, listFragment).commit();
             }
-            AstuListFragment listFragment = new AstuListFragment();
-            getSupportFragmentManager().beginTransaction().add(R.id.frag_list_container, listFragment).commit();
         }
     }
 
@@ -129,7 +152,7 @@ public class VentureActivity extends AppCompatActivity
         Log.i("clicked on item: ", item.toString());
         ThaumaListFragment detail = new ThaumaListFragment();
         Bundle args = new Bundle();
-        args.putString(ThaumaListFragment.ARG_ASTU_FILENAME, item.filename);
+        args.putLong(ThaumaListFragment.ARG_ASTU_ID, item.id);
         detail.setArguments(args);
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
@@ -139,10 +162,11 @@ public class VentureActivity extends AppCompatActivity
     }
 
     @Override
-    public void onThaumaFragmentInteraction(Thauma thauma) {
+    public void onThaumaFragmentInteraction(Astu astu, Thauma thauma) {
         Log.i("clicked on item: ", thauma.toString());
         ThaumaManager detail = new ThaumaManager();
         Bundle args = new Bundle();
+        args.putLong(ThaumaManager.ARG_ASTU_ID, astu.id);
         args.putInt(ThaumaManager.ARG_THAUMA_UID, thauma.getUid());
         detail.setArguments(args);
 

@@ -1,4 +1,4 @@
-package descriptio.net.venture;
+package descriptio.net.venture.views;
 
 import android.app.PendingIntent;
 import android.content.Context;
@@ -37,6 +37,9 @@ import com.google.android.gms.maps.model.LatLng;
 
 import java.io.InputStream;
 
+import descriptio.net.venture.GeofenceTransitionsIntentService;
+import descriptio.net.venture.R;
+import descriptio.net.venture.io.PeriegesisDbHelper;
 import descriptio.net.venture.models.Astu;
 import descriptio.net.venture.models.Thauma;
 
@@ -55,6 +58,7 @@ public class ThaumaManager extends Fragment
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, ResultCallback<Status> {
 
+    public static final String ARG_ASTU_ID = "astu_id";
     public static final String ARG_THAUMA_UID = "thauma_uid";
     public static final int MY_PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 92;   // can be any magic number < 127
 
@@ -62,7 +66,7 @@ public class ThaumaManager extends Fragment
     public GoogleMap mMap;
     public Circle mCircle;
 
-    private int mThaumaId;
+    private Astu mAstu;
     private Thauma mThauma;
     private GoogleApiClient mApiClient;
 
@@ -71,7 +75,7 @@ public class ThaumaManager extends Fragment
     private boolean apiAvailable;
 
     private OnThaumaManagerInteractionListener mListener;
-    private static final String LOGCAT_TAG = "ThaumaManager";
+    private final String LOGCAT_TAG = "ThaumaManager";
 
     //TODO: this class does too much, think about splitting up
     public ThaumaManager() {
@@ -94,34 +98,35 @@ public class ThaumaManager extends Fragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Astu astu = null;
         if (getArguments() != null) {
-            mThaumaId = getArguments().getInt(ARG_THAUMA_UID);
+            long astuId = getArguments().getLong(ARG_ASTU_ID);
+            int thaumaId = getArguments().getInt(ARG_THAUMA_UID);
             AssetManager manager = getActivity().getAssets();
+            String filename = new PeriegesisDbHelper(getContext()).getAstuPath(astuId);
             InputStream stream;
             try {
-                stream = manager.open("astea/astu-seattle-0-1.json");
+                stream = manager.open(filename);
             } catch (Exception e) {
                 stream = null;
-                Log.e("astea open", "there was a failure opening the file");
+                Log.e(LOGCAT_TAG, "there was a failure opening the file");
             }
             try {
-                astu = new Astu(stream);
+                mAstu = new Astu(stream, astuId);
             } catch (Exception e) {
-                Log.e("astea parse failure", "there was a failure parsing the stream");
+                Log.e(LOGCAT_TAG, "there was a failure parsing the stream");
             }
-            if (astu != null) {
-                for (Thauma item : astu.getThaumata()) {
-                    if (item.getUid() == mThaumaId) {
+            if (mAstu != null) {
+                for (Thauma item : mAstu.getThaumata()) {
+                    if (item.getUid() == thaumaId) {
                         mThauma = item;
                     }
                 }
             }
         }
         if (mThauma == null) {
-            Log.i("boo", "failed to load a thuama from arguments");
+            Log.i(LOGCAT_TAG, "failed to load a thuama from arguments");
         } else {
-            Log.i("success", "loaded thauma " + mThauma.getName());
+            Log.i(LOGCAT_TAG, "successfully loaded thauma " + mThauma.getName());
             mApiClient = new GoogleApiClient.Builder(this.getContext())
                     .addApi(LocationServices.API)
                     .addConnectionCallbacks(this)
@@ -147,7 +152,7 @@ public class ThaumaManager extends Fragment
         toggle.setChecked(false);
         toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                //if (mCircle != null) {
+                if (mCircle != null) {
                     if (isChecked) {
                         Log.i(LOGCAT_TAG, "isChecked: true");
                         geofenceRequested = true;
@@ -158,7 +163,7 @@ public class ThaumaManager extends Fragment
                         Log.i(LOGCAT_TAG, "isChecked: false");
                         mCircle.setFillColor(0);
                     }
-                //}
+                }
             }
         });
         return view;
@@ -290,9 +295,11 @@ public class ThaumaManager extends Fragment
             Geofence fence = builder.build();
             GeofencingRequest request = new GeofencingRequest.Builder().addGeofence(fence).build();
             Intent intent = new Intent(this.getContext(), GeofenceTransitionsIntentService.class);
+            intent.putExtra(ARG_ASTU_ID, mAstu.id);
+            intent.putExtra(ARG_THAUMA_UID, mThauma.getUid());
             LocationServices.GeofencingApi
                     .addGeofences(mApiClient, request, PendingIntent.getService(
-                            this.getContext(), 1234, new Intent(this.getContext(), GeofenceTransitionsIntentService.class), PendingIntent.FLAG_UPDATE_CURRENT))
+                            this.getContext(), 1234, intent, PendingIntent.FLAG_UPDATE_CURRENT))
                     .setResultCallback(this);
         }
     }

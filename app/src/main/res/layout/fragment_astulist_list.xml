@@ -13,6 +13,6 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         app:layoutManager="LinearLayoutManager"
-        tools:context="descriptio.net.venture.AstuListFragment"
+        tools:context=".views.AstuListFragment"
         tools:listitem="@layout/fragment_astulist" />
 </FrameLayout>

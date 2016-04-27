@@ -1,4 +1,4 @@
-package descriptio.net.venture;
+package descriptio.net.venture.views;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import descriptio.net.venture.R;
 import descriptio.net.venture.models.Astu;
 import descriptio.net.venture.models.Thauma;
 
@@ -43,7 +44,7 @@ public class MyThaumaListRecyclerViewAdapter extends RecyclerView.Adapter<MyThau
                 if (null != mListener) {
                     // Notify the active callbacks interface (the activity, if the
                     // fragment is attached to one) that an item has been selected.
-                    mListener.onThaumaFragmentInteraction(holder.mItem);
+                    mListener.onThaumaFragmentInteraction(mAstu, holder.mItem);
                 }
             }
         });

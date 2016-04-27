@@ -1,4 +1,4 @@
-package descriptio.net.venture;
+package descriptio.net.venture.views;
 
 import android.content.Context;
 import android.support.v7.widget.CardView;
@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import descriptio.net.venture.R;
 import descriptio.net.venture.models.Astu;
 
 import java.util.List;

@@ -9,24 +9,23 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import descriptio.net.venture.utilities.JsonReader;
+import descriptio.net.venture.io.JsonReader;
 
 /**
  * Created by rahar on 10/7/2015.
  */
 public class Astu {
 
-    public String filename;
+    public final long id;
     private String name;
     private String overview;
     private String region;
     private String imageUrl;
     private Map<int[], String> periods;
-    private int uid;
 
     private List<Thauma> topoi;
 
-    public Astu(InputStream in) throws IOException{
+    public Astu(InputStream in, long id) throws IOException{
         try {
             JsonReader reader = new JsonReader(in);
             this.name = reader.getAstuName();
@@ -38,6 +37,7 @@ public class Astu {
             // alert the user in some way that one of the astea is wonky
             Log.e("json error", e.toString());
         }
+        this.id = id;
     }
 
     public String getName() {
@@ -60,6 +60,6 @@ public class Astu {
         String overview = this.overview != null ? this.overview : "";
         String region = this.region != null ? this.region : "";
 
-        return "astu name: " + name + ", astu overview: " + overview + ", astu region: " + region + ", topoi: " + (topoi == null ? 0: topoi.size());
+        return "astu name: " + name + ", astu id: " + this.id + ", astu overview: " + overview + ", astu region: " + region + ", topoi: " + (topoi == null ? 0: topoi.size());
     }
 }
