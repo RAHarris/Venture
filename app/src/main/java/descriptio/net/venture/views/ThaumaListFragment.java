@@ -12,10 +12,13 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import descriptio.net.venture.R;
+import descriptio.net.venture.io.AstuStateContract;
 import descriptio.net.venture.io.PeriegesisDbHelper;
 import descriptio.net.venture.models.Astu;
 import descriptio.net.venture.models.Thauma;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 /**
@@ -53,14 +56,28 @@ public class ThaumaListFragment extends Fragment {
         if (getArguments() != null) {
             PeriegesisDbHelper dbHelper = new PeriegesisDbHelper(getContext());
             long id = getArguments().getLong(ARG_ASTU_ID);
-            String filename = dbHelper.getAstuPath(id);
-            AssetManager manager = getActivity().getAssets();
+            String path = dbHelper.getAstuDetails(id)[0];
+            int locType = Integer.parseInt(dbHelper.getAstuDetails(id)[1]);
             InputStream stream;
-            try {
-                stream = manager.open(filename);
-            } catch (Exception e) {
+            // TODO: refactor this logic into a utilities class
+            if (locType == AstuStateContract.LocTypes.asset.ordinal()) {
+                AssetManager manager = getActivity().getAssets();
+                try {
+                    stream = manager.open(path);
+                } catch (Exception e) {
+                    stream = null;
+                    Log.e(LOGCAT_TAG, "there was a failure opening " + path);
+                }
+            } else if (locType == AstuStateContract.LocTypes.external.ordinal()) {
+                try {
+                    stream = new FileInputStream(path);
+                } catch (FileNotFoundException e) {
+                    stream = null;
+                    Log.e(LOGCAT_TAG, "missing file with path " + path);
+                }
+            } else {
+                Log.e(LOGCAT_TAG, "didn't recognize locType " + locType);
                 stream = null;
-                Log.e(LOGCAT_TAG, "there was a failure opening " + filename);
             }
             try {
                 astu = new Astu(stream, id);

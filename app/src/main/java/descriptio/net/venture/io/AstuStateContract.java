@@ -15,8 +15,9 @@ public class AstuStateContract {
         public static final String COLUMN_NAME_LOC_TYPE = "locType";
     }
 
-    public static abstract class LocTypes {
-        public static final int asset = 1;
-        public static final int cloud = 2;
+    public enum LocTypes {
+        asset,
+        cloud,
+        external
     }
 }

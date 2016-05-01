@@ -16,6 +16,8 @@ import descriptio.net.venture.io.AstuStateContract;
 import descriptio.net.venture.io.PeriegesisDbHelper;
 import descriptio.net.venture.models.Astu;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -32,6 +34,7 @@ public class AstuListFragment extends Fragment {
 
     private OnListFragmentInteractionListener mListener;
     List<Astu> astea;
+    AssetManager manager;
 
     public AstuListFragment() {
     }
@@ -56,22 +59,10 @@ public class AstuListFragment extends Fragment {
         View rView = view.findViewById(R.id.astulist_recyclerview);
 
         astea = new ArrayList<>();
-        AssetManager manager = getActivity().getAssets();
-        List<String[]> asteaFiles = dbHelper.getAsteaPaths();
-        InputStream stream;
+        manager = getActivity().getAssets();
+        List<String[]> asteaFiles = dbHelper.getAsteaDetails();
         for (String[] curFile : asteaFiles){
-            try {
-                stream = manager.open(curFile[1]);
-            } catch (Exception e) {
-                stream = null;
-                Log.e(LOGCAT_TAG, "there was a failure opening " + curFile[1]);
-            }
-            try {
-                Astu item = new Astu(stream, Long.parseLong(curFile[0]));
-                astea.add(item);
-            } catch (Exception e) {
-                Log.e(LOGCAT_TAG, "there was a failure parsing the stream");
-            }
+            readAstu(curFile);
         }
 
         if (rView instanceof RecyclerView) {
@@ -102,5 +93,37 @@ public class AstuListFragment extends Fragment {
 
     public interface OnListFragmentInteractionListener {
         void onListItemClicked(Astu item);
+    }
+
+    private void readAstu(String[] paths) {
+        long index = Long.parseLong(paths[0]);
+        String path = paths[1];
+        int locType = Integer.parseInt(paths[2]);
+        Log.i(LOGCAT_TAG, "index: " + index + ", path: " + path + ", locType: " + locType);
+        InputStream stream;
+        if (locType == AstuStateContract.LocTypes.asset.ordinal()) {
+            try {
+                stream = manager.open(path);
+            } catch (Exception e) {
+                stream = null;
+                Log.e(LOGCAT_TAG, "there was a failure opening " + path);
+            }
+        } else if (locType == AstuStateContract.LocTypes.external.ordinal()) {
+            try {
+                stream = new FileInputStream(path);
+            } catch (FileNotFoundException e) {
+                stream = null;
+                Log.e(LOGCAT_TAG, "missing file with path " + path);
+            }
+        } else {
+            Log.e(LOGCAT_TAG, "didn't recognize locType " + locType);
+            stream = null;
+        }
+        try {
+            Astu item = new Astu(stream, index);
+            astea.add(item);
+        } catch (Exception e) {
+            Log.e(LOGCAT_TAG, "there was a failure parsing the stream");
+        }
     }
 }

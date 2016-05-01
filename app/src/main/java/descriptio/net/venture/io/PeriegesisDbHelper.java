@@ -36,12 +36,12 @@ public class PeriegesisDbHelper extends SQLiteOpenHelper {
         // TODO: figure out db upgrade path
     }
 
-    public long addAstu(String filepath, int locType) {
+    public long addAstu(String filepath, AstuStateContract.LocTypes locType) {
         // TODO: make async
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(AstuStateContract.AstuState.COLUMN_NAME_FILEPATH, filepath);
-        values.put(AstuStateContract.AstuState.COLUMN_NAME_LOC_TYPE, locType);
+        values.put(AstuStateContract.AstuState.COLUMN_NAME_LOC_TYPE, locType.ordinal());
         Log.i(LOGCAT_TAG, values.toString());
         long newRowId;
         newRowId = db.insert(
@@ -52,12 +52,14 @@ public class PeriegesisDbHelper extends SQLiteOpenHelper {
         return newRowId;
     }
 
-    public String getAstuPath(long id) {
+    public String[] getAstuDetails(long id) {
         // TODO: make async & error handling
+        String[] path = null;
         SQLiteDatabase db = this.getReadableDatabase();
         String[] projection = {
                 AstuStateContract.AstuState._ID,
                 AstuStateContract.AstuState.COLUMN_NAME_FILEPATH,
+                AstuStateContract.AstuState.COLUMN_NAME_LOC_TYPE,
         };
         String whereClause = AstuStateContract.AstuState._ID + " =?";
         String [] whereArgs = { Long.toString(id) };
@@ -69,10 +71,12 @@ public class PeriegesisDbHelper extends SQLiteOpenHelper {
                 null,
                 null,
                 AstuStateContract.AstuState._ID);
-        cursor.moveToFirst();
-        String path = cursor.getString(
-                cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_FILEPATH)
-        );
+        if (cursor.moveToFirst()) {
+            path = new String[] {
+                    cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_FILEPATH)),
+                    cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_LOC_TYPE)),
+            };
+        }
         return path;
     }
 
@@ -100,10 +104,47 @@ public class PeriegesisDbHelper extends SQLiteOpenHelper {
         return path;
     }
 
-    public List<String[]> getAsteaPaths() {
+    public List<String[]> getAsteaDetails() {
         // TODO: make async & error handling
         SQLiteDatabase db = this.getReadableDatabase();
         List<String[]> paths = new ArrayList<>();
+        String[] projection = {
+                AstuStateContract.AstuState._ID,
+                AstuStateContract.AstuState.COLUMN_NAME_FILEPATH,
+                AstuStateContract.AstuState.COLUMN_NAME_LOC_TYPE,
+        };
+        String whereClause = AstuStateContract.AstuState._ID + " !=?";
+        String [] whereArgs = { Integer.toString(-1) };
+        Cursor cursor = db.query(
+                AstuStateContract.AstuState.TABLE_NAME,
+                projection,
+                whereClause,
+                whereArgs,
+                null,
+                null,
+                AstuStateContract.AstuState._ID);
+        if (cursor.moveToFirst()) {
+            String[] first = {
+                    cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState._ID)),
+                    cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_FILEPATH)),
+                    cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_LOC_TYPE))
+            };
+            paths.add(first);
+        }
+        while (cursor.moveToNext()) {
+            paths.add(new String[]{
+                    cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState._ID)),
+                    cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_FILEPATH)),
+                    cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_LOC_TYPE))
+            });
+        }
+        return paths;
+    }
+
+    public List<String> getAsteaPathnames() {
+        // TODO: make async & error handling
+        SQLiteDatabase db = this.getReadableDatabase();
+        List<String> pathnames = new ArrayList<>();
         String[] projection = {
                 AstuStateContract.AstuState._ID,
                 AstuStateContract.AstuState.COLUMN_NAME_FILEPATH,
@@ -118,19 +159,13 @@ public class PeriegesisDbHelper extends SQLiteOpenHelper {
                 null,
                 null,
                 AstuStateContract.AstuState._ID);
-        cursor.moveToFirst();
-        String[] first = {
-                cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState._ID)),
-                cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_FILEPATH))
-        };
-        paths.add(first);
-        while (cursor.moveToNext()) {
-            paths.add(new String[]{
-                    cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState._ID)),
-                    cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_FILEPATH))
-            });
+        if (cursor.moveToFirst()) {
+            pathnames.add(cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_FILEPATH)));
         }
-        return paths;
+        while (cursor.moveToNext()) {
+            pathnames.add(cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_FILEPATH)));
+        }
+        return pathnames;
     }
 
     private static class Commands {

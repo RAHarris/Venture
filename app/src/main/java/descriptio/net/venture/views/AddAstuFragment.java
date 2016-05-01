@@ -1,20 +1,37 @@
 package descriptio.net.venture.views;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.database.DataSetObserver;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 import descriptio.net.venture.R;
+import descriptio.net.venture.io.AstuStateContract;
+import descriptio.net.venture.io.PeriegesisDbHelper;
 import descriptio.net.venture.utilities.FileActions;
 
 
@@ -29,7 +46,10 @@ import descriptio.net.venture.utilities.FileActions;
 public class AddAstuFragment extends Fragment {
 
     private OnAstuAddedListener mListener;
+    private boolean permissionAvailable = false;
+    private List<File> files;
 
+    private final int MY_PERMISSIONS_REQUEST_ACCESS_FILES = 14;
     private final String LOGCAT_TAG = "AddAstuFragment";
 
     public AddAstuFragment() {
@@ -58,17 +78,39 @@ public class AddAstuFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_add_astu, container, false);
-        ListView fileView = (ListView) view.findViewById(R.id.file_list);
-        File[] files = FileActions.filesInPath(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS));
-        Log.i(LOGCAT_TAG, "there are " + files.length + " files in downloads");
-        for (File file : files) {
-            try {
-              Log.i("possible file", file.getCanonicalPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        files = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_ACCESS_FILES);
+        } else {
+            permissionAvailable = true;
         }
+        getFiles();
+        ListView fileView = (ListView) view.findViewById(R.id.file_list);
+        fileView.setAdapter(new ArrayAdapter<File>(getContext(), R.layout.add_astu_file_item, files));
+        fileView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                File file = files.get(position);
+                PeriegesisDbHelper helper = new PeriegesisDbHelper(getContext());
+                if (!helper.getAsteaPathnames().contains(file.getPath())) {
+                    helper.addAstu(file.getPath(), AstuStateContract.LocTypes.external);
+                }
+            }
+        });
         return view;
+    }
+
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) throws SecurityException {
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_ACCESS_FILES:
+                if (grantResults.length > 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    permissionAvailable = true;
+                    getFiles();
+                } else {
+                    // do nothing; the user has said we're not allowed to read their files
+                }
+        }
     }
 
     // TODO: Rename method, update argument and hook method into UI event
@@ -98,5 +140,12 @@ public class AddAstuFragment extends Fragment {
     public interface OnAstuAddedListener {
         // TODO: Update argument type and name
         void onAstuAdded(Uri uri);
+    }
+
+    private void getFiles() {
+        Log.i(LOGCAT_TAG, "calling getFiles with permissionAvailable set to: " + permissionAvailable);
+        if (permissionAvailable) {
+            files.addAll(FileActions.filesOfTypeInPath(Environment.getExternalStorageDirectory(), ".json"));
+        }
     }
 }
