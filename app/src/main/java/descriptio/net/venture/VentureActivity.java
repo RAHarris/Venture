@@ -1,10 +1,10 @@
 package descriptio.net.venture;
 
 import android.content.Intent;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentTransaction;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -17,18 +17,20 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View.OnClickListener;
 
-import descriptio.net.venture.io.PeriegesisDbHelper;
 import descriptio.net.venture.models.Astu;
 import descriptio.net.venture.models.Thauma;
-import descriptio.net.venture.views.AddAstuFragment;
 import descriptio.net.venture.views.AstuListFragment;
 import descriptio.net.venture.views.ThaumaListFragment;
 import descriptio.net.venture.views.ThaumaManager;
 
+import descriptio.net.venture.dialogs.AddLocalAstuDialogFragment;
+
+import com.getbase.floatingactionbutton.FloatingActionButton;
+
 public class VentureActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
             AstuListFragment.OnListFragmentInteractionListener,
-            AddAstuFragment.OnAstuAddedListener,
+            AddLocalAstuDialogFragment.OnAstuAddedListener,
             ThaumaListFragment.OnThaumaFragmentInteractionListener,
             ThaumaManager.OnThaumaManagerInteractionListener {
 
@@ -42,18 +44,21 @@ public class VentureActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new OnClickListener() {
+        FloatingActionButton fabLocal = (FloatingActionButton) findViewById(R.id.fab_local);
+        fabLocal.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                AddAstuFragment newView = new AddAstuFragment();
-                Bundle args = new Bundle();
-                newView.setArguments(args);
+                DialogFragment localFragment = new AddLocalAstuDialogFragment();
+                localFragment.show(getSupportFragmentManager(), "addlocal");
+            }
+        });
 
-                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.frag_list_container, newView);
-                transaction.addToBackStack(null);
-                transaction.commit();
+        FloatingActionButton fabCloud = (FloatingActionButton) findViewById(R.id.fab_cloud);
+        fabCloud.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DialogFragment localFragment = new AddLocalAstuDialogFragment();
+                localFragment.show(getSupportFragmentManager(), "addlocal");
             }
         });
 

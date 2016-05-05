@@ -174,7 +174,7 @@ public class ThaumaManager extends Fragment
                     if (isChecked) {
                         Log.i(LOGCAT_TAG, "isChecked: true");
                         geofenceRequested = true;
-                        mCircle.setFillColor(R.color.colorPrimary);
+                        mCircle.setFillColor(R.color.primary);
                         updateGeofence(mThauma.getCoords(), "123456");
 
                     } else {

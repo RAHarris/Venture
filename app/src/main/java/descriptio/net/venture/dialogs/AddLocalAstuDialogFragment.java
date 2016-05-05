@@ -1,7 +1,10 @@
-package descriptio.net.venture.views;
+package descriptio.net.venture.dialogs;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.database.DataSetObserver;
 import android.net.Uri;
@@ -9,6 +12,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -35,24 +39,16 @@ import descriptio.net.venture.io.PeriegesisDbHelper;
 import descriptio.net.venture.utilities.FileActions;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link AddAstuFragment.OnAstuAddedListener} interface
- * to handle interaction events.
- * Use the {@link AddAstuFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class AddAstuFragment extends Fragment {
+public class AddLocalAstuDialogFragment extends DialogFragment {
 
     private OnAstuAddedListener mListener;
     private boolean permissionAvailable = false;
     private List<File> files;
 
     private final int MY_PERMISSIONS_REQUEST_ACCESS_FILES = 14;
-    private final String LOGCAT_TAG = "AddAstuFragment";
+    private final String LOGCAT_TAG = "AddLocalAstuDialogFragment";
 
-    public AddAstuFragment() {
+    public AddLocalAstuDialogFragment() {
         // Required empty public constructor
     }
 
@@ -63,8 +59,8 @@ public class AddAstuFragment extends Fragment {
      * @return A new instance of fragment AddAstuFragment.
      */
     // TODO: Rename and change types and number of parameters
-    public static AddAstuFragment newInstance() {
-        AddAstuFragment fragment = new AddAstuFragment();
+    public static AddLocalAstuDialogFragment newInstance() {
+        AddLocalAstuDialogFragment fragment = new AddLocalAstuDialogFragment();
         return fragment;
     }
 
@@ -74,31 +70,47 @@ public class AddAstuFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_add_astu, container, false);
         files = new ArrayList<>();
+        final List<File> selectedItems = new ArrayList<>();
         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
                 || ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE}, MY_PERMISSIONS_REQUEST_ACCESS_FILES);
         } else {
             permissionAvailable = true;
         }
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         getFiles();
-        ListView fileView = (ListView) view.findViewById(R.id.file_list);
-        fileView.setAdapter(new ArrayAdapter<File>(getContext(), R.layout.add_astu_file_item, files));
-        fileView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                File file = files.get(position);
-                PeriegesisDbHelper helper = new PeriegesisDbHelper(getContext());
-                if (!helper.getAsteaPathnames().contains(file.getPath())) {
-                    helper.addAstu(file.getPath(), AstuStateContract.LocTypes.external);
-                }
-            }
-        });
-        return view;
+        builder.setTitle("Choose a file from your device")
+                .setMultiChoiceItems(getFilesArray(), null, new DialogInterface.OnMultiChoiceClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+                        if (isChecked) {
+                            selectedItems.add(files.get(which));
+                        } else if (selectedItems.contains(files.get(which))){
+                            selectedItems.remove(files.get(which));
+                        }
+                    }
+                })
+                .setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        PeriegesisDbHelper helper = new PeriegesisDbHelper(getContext());
+                        for (File file : selectedItems) {
+                            if (!helper.getAsteaPathnames().contains(file.getPath())) {
+                                helper.addAstu(file.getPath(), AstuStateContract.LocTypes.external);
+                            }
+                        }
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // do nothing
+                    }
+                });
+        return builder.create();
     }
 
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) throws SecurityException {
@@ -147,5 +159,13 @@ public class AddAstuFragment extends Fragment {
         if (permissionAvailable) {
             files.addAll(FileActions.filesOfTypeInPath(Environment.getExternalStorageDirectory(), ".json"));
         }
+    }
+
+    private String[] getFilesArray() {
+        String[] array = new String[files.size()];
+        for (int i = 0; i < files.size(); i ++) {
+            array[i] = files.get(i).getName();
+        }
+        return array;
     }
 }

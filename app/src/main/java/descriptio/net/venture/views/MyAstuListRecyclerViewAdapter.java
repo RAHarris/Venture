@@ -50,7 +50,7 @@ public class MyAstuListRecyclerViewAdapter extends RecyclerView.Adapter<MyAstuLi
                 .getImageUrl())
                 .fit()
                 .centerCrop()
-                .placeholder(R.color.colorAccent)
+                .placeholder(R.color.accent_dark)
                 .into(holder.mImageView);
 
         holder.mView.setOnClickListener(new View.OnClickListener() {
