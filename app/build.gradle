@@ -33,4 +33,5 @@ dependencies {
     compile 'com.google.android.gms:play-services-auth:8.4.0'
     compile 'com.google.android.gms:play-services-gcm:8.4.0'
     compile 'com.getbase:floatingactionbutton:1.10.1'
+    compile 'com.android.volley:volley:1.0.0'
 }

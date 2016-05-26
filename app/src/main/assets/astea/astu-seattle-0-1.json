@@ -14,27 +14,30 @@
     "locations": [
       {
         "name": "Space Needle",
-        "summary": "An artistic and architectural marvel, built for the World Fair of year.",
+        "summary": "An artistic and architectural marvel, built for the 1962 World Fair.",
+        "description": "The Space Needle is an observation tower in Seattle, Washington, a landmark of the Pacific Northwest, and an icon of Seattle. It was built in the Seattle Center for the 1962 World's Fair, which drew over 2.3 million visitors, when nearly 20,000 people a day used its elevators.",
         "period_ids": [3, 4],
         "uid": 1,
         "coords": {
           "lat": 47.6205,
-          "lng": -122.349083
+          "lng": -122.3491
         }
       },
       {
         "name": "Pike Place Market",
         "summary": "Buy literally everything you could ever need.  Everything.  Also cheap flowers, because flowers are pretty.",
+        "description": "Pike Place Market is a public market overlooking the Elliott Bay waterfront in Seattle, Washington, United States. The Market opened August 17, 1907, and is one of the oldest continuously operated public farmers' markets in the United States. It is a place of business for many small farmers, craftspeople and merchants. Named after the central street, Pike Place runs northwest from Pike Street to Virginia Street.",
         "period_ids": [2, 3, 4],
         "uid": 2,
         "coords": {
-          "lat": 47.6205,
-          "lng": -122.349083
+          "lat": 47.6107,
+          "lng": -122.3426
         }
       },
       {
-        "name": "Native American Museum",
+        "name": "Daybreak Star Center",
         "summary": "Located near the site where archaeologists have discovered evidence of human habitants 8000 years ago.  Very cool.",
+        "description": "The Daybreak Star Cultural Center is a Native American Cultural Center in Seattle, Washington, described by its parent organization United Indians of All Tribes as “an urban base for Native Americans in the Seattle area.”   Daybreak Star Indian Cultural Center is Located on 20 acres (81,000 m²) in Seattle’s Discovery Park in the Magnolia neighborhood.",
         "period_ids": [0, 4],
         "uid": 4,
         "coords": {
@@ -45,6 +48,7 @@
       {
         "name": "dummy",
         "summary": "Something with a short summary here.",
+        "description": "slightly longer description, but not that much longer",
         "period_ids": [2],
         "uid": 5,
         "coords": {

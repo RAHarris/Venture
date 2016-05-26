@@ -17,6 +17,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View.OnClickListener;
 
+import descriptio.net.venture.dialogs.AddHostedAstuDialogFragment;
+import descriptio.net.venture.dialogs.ManageAstuListDialogFragment;
+import descriptio.net.venture.io.RefreshAstuListListenerInterface;
 import descriptio.net.venture.models.Astu;
 import descriptio.net.venture.models.Thauma;
 import descriptio.net.venture.views.AstuListFragment;
@@ -25,14 +28,18 @@ import descriptio.net.venture.views.ThaumaManager;
 
 import descriptio.net.venture.dialogs.AddLocalAstuDialogFragment;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.Volley;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 
 public class VentureActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
             AstuListFragment.OnListFragmentInteractionListener,
-            AddLocalAstuDialogFragment.OnAstuAddedListener,
             ThaumaListFragment.OnThaumaFragmentInteractionListener,
-            ThaumaManager.OnThaumaManagerInteractionListener {
+            ThaumaManager.OnThaumaManagerInteractionListener,
+            RefreshAstuListListenerInterface {
+
+    private String LIST_FRAGMENT_NAME = "LIST_FRAGMENT";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,8 +55,8 @@ public class VentureActivity extends AppCompatActivity
         fabLocal.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                DialogFragment localFragment = new AddLocalAstuDialogFragment();
-                localFragment.show(getSupportFragmentManager(), "addlocal");
+                DialogFragment localFragment = new AddHostedAstuDialogFragment();
+                localFragment.show(getSupportFragmentManager(), "addhosted");
             }
         });
 
@@ -90,7 +97,7 @@ public class VentureActivity extends AppCompatActivity
                     return;
                 }
                 AstuListFragment listFragment = new AstuListFragment();
-                getSupportFragmentManager().beginTransaction().add(R.id.frag_list_container, listFragment).commit();
+                getSupportFragmentManager().beginTransaction().add(R.id.frag_list_container, listFragment, LIST_FRAGMENT_NAME).commit();
             }
         }
     }
@@ -139,8 +146,9 @@ public class VentureActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_slideshow) {
 
-        } else if (id == R.id.nav_manage) {
-
+        } else if (id == R.id.nav_delete) {
+            DialogFragment manageListFragment = new ManageAstuListDialogFragment();
+            manageListFragment.show(getSupportFragmentManager(), "manage");
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
@@ -186,6 +194,8 @@ public class VentureActivity extends AppCompatActivity
 
     }
 
-    public void onAstuAdded(Uri uri) {
+    public void refreshAstea() {
+        AstuListFragment fragment = (AstuListFragment) getSupportFragmentManager().findFragmentByTag(LIST_FRAGMENT_NAME);
+        fragment.refreshAstea();
     }
 }

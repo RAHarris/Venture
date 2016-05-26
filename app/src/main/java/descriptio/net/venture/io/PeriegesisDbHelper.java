@@ -77,10 +77,11 @@ public class PeriegesisDbHelper extends SQLiteOpenHelper {
                     cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_LOC_TYPE)),
             };
         }
+        db.close();
         return path;
     }
 
-    public String getIdForPath(String filename) {
+    public String getIdForPath(String path) {
         // TODO: make async & error handling
         SQLiteDatabase db = this.getReadableDatabase();
         String[] projection = {
@@ -88,7 +89,7 @@ public class PeriegesisDbHelper extends SQLiteOpenHelper {
                 AstuStateContract.AstuState.COLUMN_NAME_FILEPATH,
         };
         String whereClause = AstuStateContract.AstuState.COLUMN_NAME_FILEPATH + " =?";
-        String [] whereArgs = { filename };
+        String [] whereArgs = { path };
         Cursor cursor = db.query(
                 AstuStateContract.AstuState.TABLE_NAME,
                 projection,
@@ -98,10 +99,19 @@ public class PeriegesisDbHelper extends SQLiteOpenHelper {
                 null,
                 AstuStateContract.AstuState._ID);
         cursor.moveToFirst();
-        String path = cursor.getString(
+        String id = cursor.getString(
                 cursor.getColumnIndex(AstuStateContract.AstuState._ID)
         );
-        return path;
+        db.close();
+        return id;
+    }
+
+    public void removeAstuForPath(String path) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        String whereClause = AstuStateContract.AstuState.COLUMN_NAME_FILEPATH + " =?";
+        String[] whereArgs = { path };
+        db.delete(AstuStateContract.AstuState.TABLE_NAME, whereClause, whereArgs);
+        db.close();
     }
 
     public List<String[]> getAsteaDetails() {
@@ -138,6 +148,7 @@ public class PeriegesisDbHelper extends SQLiteOpenHelper {
                     cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_LOC_TYPE))
             });
         }
+        db.close();
         return paths;
     }
 
@@ -165,6 +176,7 @@ public class PeriegesisDbHelper extends SQLiteOpenHelper {
         while (cursor.moveToNext()) {
             pathnames.add(cursor.getString(cursor.getColumnIndex(AstuStateContract.AstuState.COLUMN_NAME_FILEPATH)));
         }
+        db.close();
         return pathnames;
     }
 

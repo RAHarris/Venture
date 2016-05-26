@@ -34,19 +34,21 @@ import java.util.List;
 import java.util.Set;
 
 import descriptio.net.venture.R;
+import descriptio.net.venture.VentureActivity;
 import descriptio.net.venture.io.AstuStateContract;
 import descriptio.net.venture.io.PeriegesisDbHelper;
+import descriptio.net.venture.io.RefreshAstuListListenerInterface;
 import descriptio.net.venture.utilities.FileActions;
 
 
 public class AddLocalAstuDialogFragment extends DialogFragment {
 
-    private OnAstuAddedListener mListener;
+    private RefreshAstuListListenerInterface mListener;
     private boolean permissionAvailable = false;
     private List<File> files;
 
     private final int MY_PERMISSIONS_REQUEST_ACCESS_FILES = 14;
-    private final String LOGCAT_TAG = "AddLocalAstuDialogFragment";
+    private final String LOGCAT_TAG = "AddLocalAstuDialog";
 
     public AddLocalAstuDialogFragment() {
         // Required empty public constructor
@@ -58,7 +60,6 @@ public class AddLocalAstuDialogFragment extends DialogFragment {
      *
      * @return A new instance of fragment AddAstuFragment.
      */
-    // TODO: Rename and change types and number of parameters
     public static AddLocalAstuDialogFragment newInstance() {
         AddLocalAstuDialogFragment fragment = new AddLocalAstuDialogFragment();
         return fragment;
@@ -102,12 +103,13 @@ public class AddLocalAstuDialogFragment extends DialogFragment {
                                 helper.addAstu(file.getPath(), AstuStateContract.LocTypes.external);
                             }
                         }
+                        mListener.refreshAstea();
                     }
                 })
                 .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        // do nothing
+                        dialog.cancel();
                     }
                 });
         return builder.create();
@@ -125,18 +127,11 @@ public class AddLocalAstuDialogFragment extends DialogFragment {
         }
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onAstuAdded(uri);
-        }
-    }
-
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnAstuAddedListener) {
-            mListener = (OnAstuAddedListener) context;
+        if (context instanceof RefreshAstuListListenerInterface) {
+            mListener = (RefreshAstuListListenerInterface) context;
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFragmentInteractionListener");
@@ -147,11 +142,6 @@ public class AddLocalAstuDialogFragment extends DialogFragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
-    }
-
-    public interface OnAstuAddedListener {
-        // TODO: Update argument type and name
-        void onAstuAdded(Uri uri);
     }
 
     private void getFiles() {

@@ -21,12 +21,17 @@ package descriptio.net.venture.io;
 
 public class JsonReader {
 
+    private final String LOGCAT_TAG = "JsonReader";
     private JSONObject json;
 
     public JsonReader(InputStream in) throws JSONException {
 
         JSONObject temp_json = new JSONObject( loadText(in) );
         json = temp_json.getJSONObject("city");
+    }
+
+    public JsonReader(JSONObject obj) throws JSONException {
+        json = obj.getJSONObject("city");
     }
 
     public String getAstuName() throws JSONException {
@@ -68,6 +73,7 @@ public class JsonReader {
     }
 
     private String loadText(InputStream in) {
+        Log.i(LOGCAT_TAG, "starting to load text");
         StringBuilder out = new StringBuilder();
         BufferedReader buff = new BufferedReader( new InputStreamReader(in) );
         try {

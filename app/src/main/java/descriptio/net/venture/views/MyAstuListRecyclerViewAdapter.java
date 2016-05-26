@@ -3,6 +3,7 @@ package descriptio.net.venture.views;
 import android.content.Context;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,7 @@ import com.squareup.picasso.Picasso;
 import descriptio.net.venture.R;
 import descriptio.net.venture.models.Astu;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,7 +26,7 @@ import java.util.List;
 public class MyAstuListRecyclerViewAdapter extends RecyclerView.Adapter<MyAstuListRecyclerViewAdapter.ViewHolder> {
 
     private Context context;
-    private final List<Astu> astea;
+    private List<Astu> astea;
     private final AstuListFragment.OnListFragmentInteractionListener mListener;
 
     public MyAstuListRecyclerViewAdapter(Context context, List<Astu> items, AstuListFragment.OnListFragmentInteractionListener listener) {
@@ -91,5 +93,17 @@ public class MyAstuListRecyclerViewAdapter extends RecyclerView.Adapter<MyAstuLi
         public String toString() {
             return super.toString() + " '" + mCityNameView.getText() + "'";
         }
+    }
+
+    public void swap(List<Astu> newAstea) {
+        Log.i("old astea list", astea.toString());
+        Log.i("new astea list", newAstea.toString());
+        astea = new ArrayList<>();
+        for (Astu astu : newAstea) {
+            Log.i("adding astu", astu.toString());
+            astea.add(astu);
+        }
+        Log.i("updated astea list", astea.toString());
+        notifyDataSetChanged();
     }
 }

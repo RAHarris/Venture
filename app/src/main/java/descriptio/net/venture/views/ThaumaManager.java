@@ -8,6 +8,7 @@ import android.content.res.AssetManager;
 import android.Manifest.permission;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -19,6 +20,13 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
@@ -34,6 +42,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+
+import org.json.JSONObject;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -77,6 +87,7 @@ public class ThaumaManager extends Fragment
     private boolean permissionAvailable;
     private boolean apiAvailable;
 
+    private RequestQueue requestQueue;
     private OnThaumaManagerInteractionListener mListener;
     private final String LOGCAT_TAG = "ThaumaManager";
 
@@ -102,36 +113,48 @@ public class ThaumaManager extends Fragment
         super.onCreate(savedInstanceState);
 
         if (getArguments() != null) {
-            long astuId = getArguments().getLong(ARG_ASTU_ID);
-            int thaumaId = getArguments().getInt(ARG_THAUMA_UID);
+            final long astuId = getArguments().getLong(ARG_ASTU_ID);
+            final int thaumaId = getArguments().getInt(ARG_THAUMA_UID);
             PeriegesisDbHelper dbHelper = new PeriegesisDbHelper(getContext());
             String path = dbHelper.getAstuDetails(astuId)[0];
             int locType = Integer.parseInt(dbHelper.getAstuDetails(astuId)[1]);
             InputStream stream;
             // TODO: refactor this logic into a utilities class
-            if (locType == AstuStateContract.LocTypes.asset.ordinal()) {
-                AssetManager manager = getActivity().getAssets();
-                try {
-                    stream = manager.open(path);
-                } catch (Exception e) {
-                    stream = null;
-                    Log.e(LOGCAT_TAG, "there was a failure opening " + path);
-                }
-            } else if (locType == AstuStateContract.LocTypes.external.ordinal()) {
-                try {
-                    stream = new FileInputStream(path);
-                } catch (FileNotFoundException e) {
-                    stream = null;
-                    Log.e(LOGCAT_TAG, "missing file with path " + path);
-                }
-            } else {
-                Log.e(LOGCAT_TAG, "didn't recognize locType " + locType);
-                stream = null;
-            }
             try {
-                mAstu = new Astu(stream, astuId);
+                if (locType == AstuStateContract.LocTypes.asset.ordinal()) {
+                    AssetManager manager = getActivity().getAssets();
+                    stream = manager.open(path);
+                    mAstu = new Astu(stream, astuId);
+                } else if (locType == AstuStateContract.LocTypes.external.ordinal()) {
+                    stream = new FileInputStream(path);
+                    mAstu = new Astu(stream, astuId);
+                } else if (locType == AstuStateContract.LocTypes.cloud.ordinal()) {
+                    JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, path, null, new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            Log.i(LOGCAT_TAG, "successful response???");
+                            mAstu = new Astu(response, astuId);
+                            for (Thauma item : mAstu.getThaumata()) {
+                                if (item.getUid() == thaumaId) {
+                                    mThauma = item;
+                                    updateView();
+                                }
+                            }
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.e(LOGCAT_TAG, "some problem with the response", error);
+                        }
+                    });
+                    request.setRetryPolicy(new DefaultRetryPolicy(5000, 3, 3));
+                    requestQueue.add(request);
+                } else {
+                    Log.e(LOGCAT_TAG, "didn't recognize locType " + locType);
+                    stream = null;
+                }
             } catch (Exception e) {
-                Log.e(LOGCAT_TAG, "there was a failure parsing the stream");
+                Log.e(LOGCAT_TAG, "problem with file located at " + path, e);
             }
             if (mAstu != null) {
                 for (Thauma item : mAstu.getThaumata()) {
@@ -158,45 +181,22 @@ public class ThaumaManager extends Fragment
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_thauma_manager, container, false);
-        TextView nameView = (TextView) view.findViewById(R.id.manager_name);
-        TextView descriptionView = (TextView) view.findViewById(R.id.manager_description);
         mapView = (MapView) view.findViewById(R.id.thauma_map);
         mapView.onCreate(savedInstanceState);
         mapView.getMapAsync(this);
-        nameView.setText(mThauma.getName());
-        descriptionView.setText(mThauma.getDescription());
-
-        ToggleButton toggle = (ToggleButton) view.findViewById(R.id.geofence_toggle);
-        toggle.setChecked(false);
-        toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (mCircle != null) {
-                    if (isChecked) {
-                        Log.i(LOGCAT_TAG, "isChecked: true");
-                        geofenceRequested = true;
-                        mCircle.setFillColor(R.color.primary);
-                        updateGeofence(mThauma.getCoords(), "123456");
-
-                    } else {
-                        Log.i(LOGCAT_TAG, "isChecked: false");
-                        mCircle.setFillColor(0);
-                    }
-                }
-            }
-        });
         return view;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(Uri uri) {
-        if (mListener != null) {
-            mListener.onThaumaManagerInteraction(uri);
-        }
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        updateView();
+        super.onViewCreated(view, savedInstanceState);
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        requestQueue =  Volley.newRequestQueue(getActivity().getApplicationContext());
         if (context instanceof OnThaumaManagerInteractionListener) {
             mListener = (OnThaumaManagerInteractionListener) context;
         } else {
@@ -319,6 +319,35 @@ public class ThaumaManager extends Fragment
                     .addGeofences(mApiClient, request, PendingIntent.getService(
                             this.getContext(), 1234, intent, PendingIntent.FLAG_UPDATE_CURRENT))
                     .setResultCallback(this);
+        }
+    }
+
+    private void updateView() {
+        View view = getView();
+        if (mThauma != null) {
+            TextView nameView = (TextView) view.findViewById(R.id.manager_name);
+            TextView descriptionView = (TextView) view.findViewById(R.id.manager_description);
+            nameView.setText(mThauma.getName());
+            descriptionView.setText(mThauma.getDescription());
+
+            ToggleButton toggle = (ToggleButton) view.findViewById(R.id.geofence_toggle);
+            toggle.setChecked(false);
+            toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if (mCircle != null) {
+                        if (isChecked) {
+                            Log.i(LOGCAT_TAG, "isChecked: true");
+                            geofenceRequested = true;
+                            mCircle.setFillColor(R.color.primary);
+                            updateGeofence(mThauma.getCoords(), "123456");
+
+                        } else {
+                            Log.i(LOGCAT_TAG, "isChecked: false");
+                            mCircle.setFillColor(0);
+                        }
+                    }
+                }
+            });
         }
     }
 }

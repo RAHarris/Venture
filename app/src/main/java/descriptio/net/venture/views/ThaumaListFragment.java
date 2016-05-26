@@ -11,6 +11,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.android.volley.DefaultRetryPolicy;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONObject;
+
 import descriptio.net.venture.R;
 import descriptio.net.venture.io.AstuStateContract;
 import descriptio.net.venture.io.PeriegesisDbHelper;
@@ -33,6 +43,8 @@ public class ThaumaListFragment extends Fragment {
     public static final String ARG_ASTU_ID = "astu_id";
 
     private OnThaumaFragmentInteractionListener mListener;
+    private MyThaumaListRecyclerViewAdapter adapter;
+    private RequestQueue requestQueue;
     private Astu astu;
 
     /**
@@ -55,34 +67,39 @@ public class ThaumaListFragment extends Fragment {
 
         if (getArguments() != null) {
             PeriegesisDbHelper dbHelper = new PeriegesisDbHelper(getContext());
-            long id = getArguments().getLong(ARG_ASTU_ID);
+            final long id = getArguments().getLong(ARG_ASTU_ID);
             String path = dbHelper.getAstuDetails(id)[0];
             int locType = Integer.parseInt(dbHelper.getAstuDetails(id)[1]);
             InputStream stream;
-            // TODO: refactor this logic into a utilities class
-            if (locType == AstuStateContract.LocTypes.asset.ordinal()) {
-                AssetManager manager = getActivity().getAssets();
-                try {
-                    stream = manager.open(path);
-                } catch (Exception e) {
-                    stream = null;
-                    Log.e(LOGCAT_TAG, "there was a failure opening " + path);
-                }
-            } else if (locType == AstuStateContract.LocTypes.external.ordinal()) {
-                try {
-                    stream = new FileInputStream(path);
-                } catch (FileNotFoundException e) {
-                    stream = null;
-                    Log.e(LOGCAT_TAG, "missing file with path " + path);
-                }
-            } else {
-                Log.e(LOGCAT_TAG, "didn't recognize locType " + locType);
-                stream = null;
-            }
             try {
-                astu = new Astu(stream, id);
+                if (locType == AstuStateContract.LocTypes.asset.ordinal()) {
+                    AssetManager manager = getActivity().getAssets();
+                    stream = manager.open(path);
+                    astu = new Astu(stream, id);
+                } else if (locType == AstuStateContract.LocTypes.external.ordinal()) {
+                    stream = new FileInputStream(path);
+                    astu = new Astu(stream, id);
+                } else if (locType == AstuStateContract.LocTypes.cloud.ordinal()) {
+                    JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, path, null, new Response.Listener<JSONObject>() {
+                        @Override
+                        public void onResponse(JSONObject response) {
+                            astu = new Astu(response, id);
+                            adapter.swap(astu);
+                        }
+                    }, new Response.ErrorListener() {
+                        @Override
+                        public void onErrorResponse(VolleyError error) {
+                            Log.e(LOGCAT_TAG, "some problem with the response", error);
+                        }
+                    });
+                    request.setRetryPolicy(new DefaultRetryPolicy(5000, 3, 3));    // TODO: this is possibly overly conservative, test
+                    requestQueue.add(request);
+                } else {
+                    Log.e(LOGCAT_TAG, "didn't recognize locType " + locType);
+                    stream = null;
+                }
             } catch (Exception e) {
-                Log.e(LOGCAT_TAG, "there was a failure parsing the stream");
+                Log.e(LOGCAT_TAG, "problem with file located at " + path, e);
             }
         }
     }
@@ -98,7 +115,8 @@ public class ThaumaListFragment extends Fragment {
             Context context = view.getContext();
             RecyclerView recyclerView = (RecyclerView) rView;
             recyclerView.setLayoutManager(new LinearLayoutManager(context));
-            recyclerView.setAdapter(new MyThaumaListRecyclerViewAdapter(astu, mListener));
+            adapter = new MyThaumaListRecyclerViewAdapter(astu, mListener);
+            recyclerView.setAdapter(adapter);
         }
         return view;
     }
@@ -107,6 +125,7 @@ public class ThaumaListFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        requestQueue = Volley.newRequestQueue(getActivity().getApplicationContext());
         if (context instanceof OnThaumaFragmentInteractionListener) {
             mListener = (OnThaumaFragmentInteractionListener) context;
         } else {

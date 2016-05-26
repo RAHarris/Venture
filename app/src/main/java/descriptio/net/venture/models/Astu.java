@@ -3,6 +3,7 @@ package descriptio.net.venture.models;
 import android.util.Log;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +26,8 @@ public class Astu {
 
     private List<Thauma> topoi;
 
+    private final String LOGCAT_TAG = "Astu";
+
     public Astu(InputStream in, long id) throws IOException{
         try {
             JsonReader reader = new JsonReader(in);
@@ -35,7 +38,21 @@ public class Astu {
             this.topoi = reader.getAstuThaumata();
         } catch (JSONException e) {
             // alert the user in some way that one of the astea is wonky
-            Log.e("json error", e.toString());
+            Log.e(LOGCAT_TAG, "json error", e);
+        }
+        this.id = id;
+    }
+
+    public Astu(JSONObject object, long id) {
+        try {
+            JsonReader reader = new JsonReader(object);
+            this.name = reader.getAstuName();
+            this.overview = reader.getAstuRegion();
+            this.region = reader.getAstuRegion();
+            this.imageUrl = reader.getAstuImageUrl();
+            this.topoi = reader.getAstuThaumata();
+        } catch (JSONException e) {
+            Log.e(LOGCAT_TAG, "json error", e);
         }
         this.id = id;
     }

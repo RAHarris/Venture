@@ -17,8 +17,8 @@ import descriptio.net.venture.models.Thauma;
  */
 public class MyThaumaListRecyclerViewAdapter extends RecyclerView.Adapter<MyThaumaListRecyclerViewAdapter.ViewHolder> {
 
-    private final Astu mAstu;
-    private final ThaumaListFragment.OnThaumaFragmentInteractionListener mListener;
+    private Astu mAstu;
+    private ThaumaListFragment.OnThaumaFragmentInteractionListener mListener;
 
     public MyThaumaListRecyclerViewAdapter(Astu astu, ThaumaListFragment.OnThaumaFragmentInteractionListener listener) {
         mAstu = astu;
@@ -48,6 +48,11 @@ public class MyThaumaListRecyclerViewAdapter extends RecyclerView.Adapter<MyThau
                 }
             }
         });
+    }
+
+    public void swap(Astu astu) {
+        mAstu = astu;
+        notifyDataSetChanged();
     }
 
     @Override
